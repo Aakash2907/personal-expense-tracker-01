@@ -1,3 +1,2 @@
-Flask>=3.0,<4.0
-Werkzeug>=3.0,<4.0
-matplotlib>=3.8,<4.0
+# Used by Vercel (web version). Only Flask is needed.
+flask
