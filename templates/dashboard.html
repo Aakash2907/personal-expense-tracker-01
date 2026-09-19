@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Personal Expense Tracker{% endblock %}
+{% block content %}
+<div class="cards">
+  <div class="card"><small>Total Income</small><strong class="Income">{{ income|money(currency) }}</strong></div>
+  <div class="card"><small>Total Expenses</small><strong class="Expense">{{ expenses|money(currency) }}</strong></div>
+  <div class="card"><small>Current Balance</small>
+    <strong class="{{ 'Balance' if balance >= 0 else 'Expense' }}">{{ balance|money(currency) }}</strong></div>
+</div>
+
+<div class="box">
+  <h3>Monthly Budget</h3>
+  {% if status %}
+    <p>Budget {{ status.budget|money(currency) }} &nbsp;|&nbsp; Spent {{ status.spent|money(currency) }}
+       &nbsp;|&nbsp; Remaining {{ status.remaining|money(currency) }} ({{ status.percent }}% used)</p>
+    <div class="bar"><div style="width:{{ [status.percent, 100]|min }}%; background:{% if status.percent >= 100 %}#c0392b{% elif status.percent >= 80 %}#e67e22{% else %}#27ae60{% endif %};"></div></div>
+  {% else %}
+    <p>No monthly budget set. <a href="{{ url_for('settings_page') }}">Set one in Settings</a>.</p>
+  {% endif %}
+  {% if alert %}<div class="flash warning">{{ alert }}</div>{% endif %}
+</div>
+
+<div class="actions">
+  <a class="btn red" href="{{ url_for('add_transaction', type_name='expense') }}">Add Expense</a>
+  <a class="btn green" href="{{ url_for('add_transaction', type_name='income') }}">Add Income</a>
+  <a class="btn" href="{{ url_for('transactions_list') }}">View Transactions</a>
+  <a class="btn" href="{{ url_for('reports_page') }}">Reports</a>
+  <a class="btn" href="{{ url_for('settings_page') }}">Settings</a>
+  <a class="btn gray" href="{{ url_for('export_data') }}">Export Data (CSV)</a>
+</div>
+
+<h3>Recent Transactions</h3>
+<div class="table-wrap">
+  <table>
+    <tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th class="num">Amount</th></tr>
+    {% for t in recent %}
+    <tr>
+      <td>{{ t.date|dmy }}</td><td class="{{ t.type }}">{{ t.type }}</td><td>{{ t.category }}</td>
+      <td>{{ t.description }}</td><td class="num {{ t.type }}">{{ t.amount|money(currency) }}</td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">No transactions yet.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
