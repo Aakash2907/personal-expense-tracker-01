@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Register - Personal Expense Tracker{% endblock %}
+{% block content %}
+<div class="box form">
+  <h2>Register Account</h2>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="username">Username</label>
+    <input id="username" name="username" value="{{ form.username }}" required autofocus>
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" value="{{ form.email }}" required>
+    <label for="password">Password (at least 4 characters)</label>
+    <input id="password" name="password" type="password" required>
+    <label for="confirm">Confirm password</label>
+    <input id="confirm" name="confirm" type="password" required>
+    <p>
+      <button class="btn" type="submit">Register</button>
+      <a class="btn gray" href="{{ url_for('login') }}">Cancel</a>
+    </p>
+  </form>
+</div>
+{% endblock %}
