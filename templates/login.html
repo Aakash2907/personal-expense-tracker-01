@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Login - Personal Expense Tracker{% endblock %}
+{% block content %}
+<div class="box form">
+  <h2>Login</h2>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" value="{{ email }}" required autofocus>
+    <label for="password">Password</label>
+    <input id="password" name="password" type="password" required>
+    <p>
+      <button class="btn" type="submit">Login</button>
+      <a class="btn gray" href="{{ url_for('register') }}">Register</a>
+    </p>
+  </form>
+  <p class="hint">Demo accounts:<br>
+    User: demo@example.com / demo123<br>
+    Admin: admin@example.com / admin123<br>
+    Auditor: auditor@example.com / audit123</p>
+</div>
+{% endblock %}
