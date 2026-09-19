@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Personal Expense Tracker{% endblock %}</title>
+  <style>
+    :root { --bg:#f4f6f8; --dark:#2c3e50; --green:#27ae60; --red:#c0392b; --blue:#2980b9; --gray:#7f8c8d; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif; background:var(--bg); color:#222; }
+    .topbar { background:var(--dark); color:#fff; padding:10px 16px; display:flex; flex-wrap:wrap; align-items:center; gap:8px 22px; }
+    .brand { color:#fff; font-weight:700; text-decoration:none; font-size:1.1rem; }
+    .topbar nav { display:flex; flex-wrap:wrap; align-items:center; gap:6px 16px; }
+    .topbar nav a, .link { color:#fff; text-decoration:none; background:none; border:0; font:inherit; cursor:pointer; padding:0; }
+    main { max-width:980px; margin:0 auto; padding:16px; }
+    h2, h3 { margin-top:0; }
+    .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:16px; }
+    .card, .box { background:#fff; border-radius:8px; padding:14px; box-shadow:0 1px 3px rgba(0,0,0,.12); }
+    .card { text-align:center; }
+    .card small { color:var(--gray); }
+    .card strong { display:block; font-size:1.5rem; margin-top:4px; }
+    .box { margin-bottom:16px; }
+    .btn { display:inline-block; background:var(--blue); color:#fff; border:0; border-radius:6px; padding:9px 14px; text-decoration:none; font:inherit; cursor:pointer; }
+    .btn.green { background:var(--green); } .btn.red { background:var(--red); } .btn.gray { background:var(--gray); }
+    .btn.small { padding:5px 9px; font-size:.85rem; }
+    .actions { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+    label { display:block; margin:10px 0 4px; font-weight:600; }
+    input, select { width:100%; padding:9px; border:1px solid #ccc; border-radius:6px; font:inherit; background:#fff; }
+    input[type=checkbox] { width:auto; margin-right:6px; }
+    .form { max-width:440px; margin:0 auto 16px; }
+    .table-wrap { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; background:#fff; }
+    th, td { padding:8px; border-bottom:1px solid #eee; text-align:left; font-size:.92rem; }
+    .num { text-align:right; white-space:nowrap; }
+    .Expense { color:var(--red); } .Income { color:var(--green); } .Balance { color:var(--blue); }
+    .flash { padding:10px 12px; border-radius:6px; margin-bottom:10px; }
+    .flash.success { background:#d4edda; color:#155724; }
+    .flash.error { background:#f8d7da; color:#721c24; }
+    .flash.warning { background:#fff3cd; color:#856404; }
+    .bar { background:#e0e0e0; border-radius:6px; height:14px; overflow:hidden; margin:8px 0; }
+    .bar div { height:100%; }
+    .filters { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px; align-items:end; }
+    form.inline { display:inline; }
+    .hint { color:var(--gray); font-size:.85rem; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('home') }}">Personal Expense Tracker</a>
+    {% if user %}
+    <nav>
+      {% if user.get_role() == 'user' %}
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('transactions_list') }}">Transactions</a>
+        <a href="{{ url_for('reports_page') }}">Reports</a>
+        <a href="{{ url_for('settings_page') }}">Settings</a>
+      {% elif user.get_role() == 'admin' %}
+        <a href="{{ url_for('admin_page') }}">Admin Dashboard</a>
+      {% else %}
+        <a href="{{ url_for('auditor_page') }}">Audit Reports</a>
+      {% endif %}
+      <form class="inline" method="post" action="{{ url_for('logout') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="link" type="submit">Logout ({{ user.username }})</button>
+      </form>
+    </nav>
+    {% endif %}
+  </header>
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
