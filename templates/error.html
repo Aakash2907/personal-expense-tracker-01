@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }} - Personal Expense Tracker{% endblock %}
+{% block content %}
+<div class="box form">
+  <h2>Error {{ code }}</h2>
+  <p>{{ message }}</p>
+  <p><a class="btn" href="{{ url_for('home') }}">Go to Home</a></p>
+</div>
+{% endblock %}
