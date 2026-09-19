@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit Transaction' if editing else 'Add ' ~ form.type }} - Personal Expense Tracker{% endblock %}
+{% block content %}
+<div class="box form">
+  <h2>{{ 'Edit Transaction' if editing else 'Add ' ~ form.type }}</h2>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="type">Type</label>
+    {% if editing %}
+      <select id="type" name="type">
+        {% for t in ['Expense', 'Income'] %}<option {{ 'selected' if form.type == t }}>{{ t }}</option>{% endfor %}
+      </select>
+    {% else %}
+      <input value="{{ form.type }}" disabled>
+      <input type="hidden" name="type" value="{{ form.type }}">
+    {% endif %}
+
+    <label for="amount">Amount</label>
+    <input id="amount" name="amount" inputmode="decimal" placeholder="e.g. 250.50" value="{{ form.amount }}" required>
+
+    <label id="category-label" for="category">{{ 'Category' if form.type == 'Expense' else 'Source' }}</label>
+    <select id="category" name="category">
+      {% for c in (expense_categories if form.type == 'Expense' else income_categories) %}
+        <option {{ 'selected' if c == form.category }}>{{ c }}</option>
+      {% endfor %}
+    </select>
+
+    <label for="description">Description</label>
+    <input id="description" name="description" maxlength="100" value="{{ form.description }}" required>
+
+    <label for="date">Date</label>
+    <input id="date" name="date" type="date" value="{{ form.date }}" required>
+
+    <p>
+      <button class="btn" type="submit">Save</button>
+      <a class="btn gray" href="{{ url_for('transactions_list' if editing else 'dashboard') }}">Cancel</a>
+    </p>
+  </form>
+</div>
+<script>
+  // When the type is changed (edit form only) show the matching category list.
+  var lists = {{ {"Expense": expense_categories, "Income": income_categories}|tojson }};
+  var typeBox = document.getElementById("type");
+  if (typeBox && typeBox.tagName === "SELECT") {
+    typeBox.addEventListener("change", function () {
+      var box = document.getElementById("category");
+      box.innerHTML = "";
+      lists[typeBox.value].forEach(function (name) { box.add(new Option(name, name)); });
+      document.getElementById("category-label").textContent =
+        typeBox.value === "Expense" ? "Category" : "Source";
+    });
+  }
+</script>
+{% endblock %}
