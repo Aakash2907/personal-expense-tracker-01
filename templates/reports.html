@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Reports - Personal Expense Tracker{% endblock %}
+{% block content %}
+<h2>Reports</h2>
+<form class="box filters" method="get">
+  <div><label for="type">Report type</label>
+    <select id="type" name="type">
+      {% for t in report_types %}<option {{ 'selected' if form.type == t }}>{{ t }}</option>{% endfor %}
+    </select></div>
+  <div><label for="from">From</label><input id="from" name="from" type="date" value="{{ form['from'] }}"></div>
+  <div><label for="to">To</label><input id="to" name="to" type="date" value="{{ form['to'] }}"></div>
+  <div><button class="btn" type="submit">Generate Report</button>
+       <a class="btn gray" href="{{ url_for('export_report', type=form.type, **{'from': form['from'], 'to': form['to']}) }}">Export CSV</a></div>
+</form>
+
+<div class="box">
+  <h3>{{ report.type }} Report</h3>
+  <p class="hint">Generated {{ report.generated_date }} &middot; Period: {{ report.period }}</p>
+  <div class="cards">
+    <div class="card"><small>Total Income</small><strong class="Income">{{ report.summary.total_income|money(report.currency) }}</strong></div>
+    <div class="card"><small>Total Expenses</small><strong class="Expense">{{ report.summary.total_expenses|money(report.currency) }}</strong></div>
+    <div class="card"><small>Balance</small><strong class="Balance">{{ report.summary.balance|money(report.currency) }}</strong></div>
+  </div>
+
+  <div style="max-width:520px; margin:0 auto 16px;"><canvas id="chart"></canvas></div>
+
+  <h3>Category-wise expenses</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Category</th><th class="num">Amount</th><th class="num">Percent</th></tr>
+      {% for c in report.categories %}
+      <tr><td>{{ c.category }}</td><td class="num">{{ c.total|money(report.currency) }}</td><td class="num">{{ c.percent }}%</td></tr>
+      {% else %}
+      <tr><td colspan="3">No expenses found.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+
+  {% if report.type == 'Trend Analysis' %}
+  <h3 style="margin-top:16px;">Monthly trend</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>Month</th><th class="num">Income</th><th class="num">Expenses</th></tr>
+      {% for m in report.trend %}
+      <tr><td>{{ m.month }}</td><td class="num">{{ m.income|money(report.currency) }}</td><td class="num">{{ m.expenses|money(report.currency) }}</td></tr>
+      {% else %}
+      <tr><td colspan="3">No data found.</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  var report = {{ report|tojson }};
+  var s = report.summary, config;
+  if (report.type === "Category Breakdown") {
+    config = {type: "doughnut", data: {labels: report.categories.map(function (c) { return c.category; }),
+              datasets: [{data: report.categories.map(function (c) { return c.total; })}]}};
+  } else if (report.type === "Trend Analysis") {
+    config = {type: "bar", data: {labels: report.trend.map(function (m) { return m.month; }),
+              datasets: [{label: "Income", backgroundColor: "#43a047", data: report.trend.map(function (m) { return m.income; })},
+                         {label: "Expenses", backgroundColor: "#e53935", data: report.trend.map(function (m) { return m.expenses; })}]}};
+  } else {
+    config = {type: "bar", data: {labels: ["Income", "Expenses", "Balance"],
+              datasets: [{data: [s.total_income, s.total_expenses, s.balance],
+                          backgroundColor: ["#43a047", "#e53935", "#1e88e5"]}]},
+              options: {plugins: {legend: {display: false}}}};
+  }
+  if (window.Chart) { new Chart(document.getElementById("chart"), config); }
+</script>
+{% endblock %}
