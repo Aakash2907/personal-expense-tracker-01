@@ -1,5 +1,5 @@
 """
-frontend/admin.py  -  Admin dashboard and account management.
+admin.py  -  Admin dashboard and account management.
 
 What it does : counts users/transactions for the Admin Dashboard, lists all
                accounts, activates/deactivates an account or deletes it.
