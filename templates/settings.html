@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Settings - Personal Expense Tracker{% endblock %}
+{% block content %}
+<div class="box form">
+  <h2>Settings</h2>
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="currency">Currency</label>
+    <select id="currency" name="currency">
+      {% for c in currencies %}<option {{ 'selected' if current.currency == c }}>{{ c }}</option>{% endfor %}
+    </select>
+    <label for="budget">Monthly budget limit</label>
+    <input id="budget" name="budget" inputmode="decimal" placeholder="e.g. 12000" value="{{ budget_amount }}">
+    <p><label style="font-weight:normal;"><input type="checkbox" name="alerts" {{ 'checked' if current.alerts_enabled }}>
+       Enable budget alerts (notifications)</label></p>
+    <p>
+      <button class="btn" type="submit">Save Settings</button>
+      <a class="btn gray" href="{{ url_for('dashboard') }}">Back</a>
+    </p>
+  </form>
+</div>
+{% endblock %}
