@@ -1,3 +1,2 @@
-# Only one external package is used (for charts and PDF export).
-# Everything else (tkinter, sqlite3, csv, hashlib, unittest, datetime) is part of Python itself.
-matplotlib
+Flask==3.0.3
+matplotlib==3.9.2
