@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Audit Reports - Personal Expense Tracker{% endblock %}
+{% block content %}
+<h2>Audit Reports</h2>
+<p class="hint">An audit report lists every user with the number of transactions and their total income and
+  expenses. Auditors see totals only, never the transaction details.</p>
+<form method="post" action="{{ url_for('auditor_generate') }}" class="actions">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button class="btn" type="submit">Generate Audit Report</button>
+</form>
+<div class="table-wrap">
+  <table>
+    <tr><th>Report ID</th><th>Generated</th><th>Status</th><th></th></tr>
+    {% for r in audit_reports %}
+    <tr>
+      <td>{{ r.audit_report_id }}</td><td>{{ r.generated_date }}</td><td>{{ r.status }}</td>
+      <td class="num"><a class="btn small" href="{{ url_for('auditor_download', report_id=r.audit_report_id) }}">Download CSV</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4">No audit reports yet.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
