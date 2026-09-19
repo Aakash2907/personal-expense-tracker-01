@@ -1,227 +1,89 @@
 """
-validation.py
+validation.py  -  Input checking functions.
 
-Central validation functions used by both the desktop and Flask versions
-of the Personal Expense Tracker.
+What it does : checks amount, date, text, email, password, type and category.
+Why needed   : the flowchart has a "Validate Input?" decision before saving.
+               Each function returns a clean value or raises ValueError with
+               a short, friendly message that the GUI shows in a message box.
+Talks to     : transactions.py, budget.py, auth.py, reports.py (they call it).
+Diagram      : Flowchart -> "Validate Input?" ; Sequence -> before "Save".
 """
 
 import math
-import re
 from datetime import datetime
 
-DISPLAY_DATE_FORMAT = "%d-%m-%Y"
-DB_DATE_FORMAT = "%Y-%m-%d"
-
-EMAIL_PATTERN = re.compile(
-    r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
-)
-
-EXPENSE_CATEGORIES = {
-    "Food",
-    "Transport",
-    "Education",
-    "Shopping",
-    "Entertainment",
-    "Bills",
-    "Medical",
-    "Other",
-}
-
-INCOME_CATEGORIES = {
-    "Salary",
-    "Pocket Money",
-    "Scholarship",
-    "Gift",
-    "Other",
-}
+DISPLAY_DATE_FORMAT = "%d-%m-%Y"   # what the user types / sees  (18-09-2026)
+DB_DATE_FORMAT = "%Y-%m-%d"        # how we store it (sorts correctly in SQL)
 
 
 def validate_amount(text):
-    """Return a positive finite amount rounded to two decimals."""
-
-    text = str(text).strip().replace(",", "")
-
+    """Return the amount as a float. Must be numeric and greater than zero."""
+    text = str(text).strip().replace(",", "")      # allow 20,000
     if text == "":
         raise ValueError("Please enter an amount.")
-
     try:
         amount = float(text)
-    except (TypeError, ValueError):
+    except ValueError:
         raise ValueError("Please enter a valid amount.")
-
-    if not math.isfinite(amount):
+    if not math.isfinite(amount):                  # blocks 'nan' and 'inf'
         raise ValueError("Please enter a valid amount.")
-
     if amount <= 0:
         raise ValueError("Amount must be greater than zero.")
-
     return round(amount, 2)
 
 
 def validate_date(text):
-    """Convert DD-MM-YYYY into YYYY-MM-DD."""
-
-    text = str(text).strip()
-
-    if not text:
-        raise ValueError("Please enter a date.")
-
+    """Convert DD-MM-YYYY text into the database format YYYY-MM-DD."""
     try:
-        parsed = datetime.strptime(
-            text,
-            DISPLAY_DATE_FORMAT
-        )
+        parsed = datetime.strptime(str(text).strip(), DISPLAY_DATE_FORMAT)
     except ValueError:
-        raise ValueError(
-            "Please enter a valid date (DD-MM-YYYY)."
-        )
-
+        raise ValueError("Please enter a valid date (DD-MM-YYYY).")
     return parsed.strftime(DB_DATE_FORMAT)
 
 
 def validate_text(text, field_name, max_length=100):
-    """Validate normal text fields."""
-
+    """Text fields (description, username) must not be empty or too long."""
     text = str(text).strip()
-
     if text == "":
-        raise ValueError(
-            "Please enter the " + field_name + "."
-        )
-
+        raise ValueError("Please enter the " + field_name + ".")
     if len(text) > max_length:
-        raise ValueError(
-            field_name.capitalize() + " is too long."
-        )
-
+        raise ValueError(field_name.capitalize() + " is too long.")
     return text
 
 
 def validate_type(type_):
-    """Only Expense and Income are allowed."""
-
-    type_ = str(type_).strip()
-
     if type_ not in ("Expense", "Income"):
-        raise ValueError(
-            "Type must be Expense or Income."
-        )
-
+        raise ValueError("Type must be Expense or Income.")
     return type_
 
 
-def validate_category(category, transaction_type=None):
-    """
-    Validate category against the correct category list.
-
-    transaction_type is optional to preserve compatibility with the
-    existing desktop code.
-    """
-
-    category = str(category).strip()
-
-    if not category:
-        raise ValueError(
-            "Please select a category."
-        )
-
-    if transaction_type == "Expense":
-        allowed = EXPENSE_CATEGORIES
-
-    elif transaction_type == "Income":
-        allowed = INCOME_CATEGORIES
-
-    else:
-        allowed = EXPENSE_CATEGORIES | INCOME_CATEGORIES
-
-    if category not in allowed:
-        raise ValueError(
-            "Please select a valid category."
-        )
-
-    return category
+def validate_category(category):
+    if str(category).strip() == "":
+        raise ValueError("Please select a category.")
+    return str(category).strip()
 
 
 def validate_email(email):
-    """Validate and normalize an email address."""
-
     email = str(email).strip().lower()
-
-    if not EMAIL_PATTERN.fullmatch(email):
-        raise ValueError(
-            "Please enter a valid email address."
-        )
-
+    if "@" not in email or "." not in email.split("@")[-1] or " " in email:
+        raise ValueError("Please enter a valid email address.")
     return email
 
 
 def validate_password(password):
-    """Validate a password."""
-
-    password = str(password)
-
-    if len(password) < 6:
-        raise ValueError(
-            "Password must be at least 6 characters."
-        )
-
-    if len(password) > 128:
-        raise ValueError(
-            "Password is too long."
-        )
-
-    return password
+    if len(str(password)) < 4:
+        raise ValueError("Password must be at least 4 characters.")
+    return str(password)
 
 
-def validate_date_range(start_text="", end_text=""):
-    """
-    Validate an optional date range.
-
-    Returns:
-        (start_db_date, end_db_date)
-    """
-
-    start_text = str(start_text or "").strip()
-    end_text = str(end_text or "").strip()
-
-    start = (
-        validate_date(start_text)
-        if start_text
-        else None
-    )
-
-    end = (
-        validate_date(end_text)
-        if end_text
-        else None
-    )
-
-    if start and end and start > end:
-        raise ValueError(
-            "The 'From' date must be before the 'To' date."
-        )
-
-    return start, end
-
-
+# ---------------------------------------------------------------------------
+# Small date helpers used by the GUI and reports
+# ---------------------------------------------------------------------------
 def to_display_date(db_date):
-    """Convert YYYY-MM-DD to DD-MM-YYYY."""
-
-    if not db_date:
-        return ""
-
-    try:
-        return datetime.strptime(
-            str(db_date),
-            DB_DATE_FORMAT
-        ).strftime(DISPLAY_DATE_FORMAT)
-    except ValueError:
-        return str(db_date)
+    """'2026-09-18' -> '18-09-2026'"""
+    return datetime.strptime(db_date, DB_DATE_FORMAT).strftime(DISPLAY_DATE_FORMAT)
 
 
 def today_display():
-    """Return today's date as DD-MM-YYYY."""
-
-    return datetime.now().strftime(
-        DISPLAY_DATE_FORMAT
-    )
+    """Today's date as DD-MM-YYYY (default value in the forms)."""
+    return datetime.now().strftime(DISPLAY_DATE_FORMAT)
