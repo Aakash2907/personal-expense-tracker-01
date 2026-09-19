@@ -1,0 +1,2 @@
+# Only for the Tkinter desktop version (charts and PDF export on the desktop).
+matplotlib
